@@ -10,3 +10,5 @@ data/
 site/
 # API keys
 .env
+# Local preview settings for the Claude desktop app
+.claude/

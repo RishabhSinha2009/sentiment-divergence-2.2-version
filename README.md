@@ -4,7 +4,7 @@
 does the price catch up with the news?**
 
 This project tests that question on 30 large US stocks from 2015 to today. It gathers
-every daily price and every timestamped news headline about those stocks, and scores
+every daily price and 171,972 timestamped news headlines about those stocks, and scores
 each headline's tone with FinBERT, an AI model trained on financial text. It flags the
 days when news and price disagree, then tests a trading rule built on those flags. The
 test is designed to tell a real pattern apart from one that only fits the past.
@@ -23,9 +23,45 @@ don't need an account to see it.
 ## Results
 
 <!-- RESULTS:START -->
-*Pending: the backtest runs once the historical headlines have been downloaded and
-scored. This section will show the numbers exactly as the `backtest` command
-produced them, along with the full HTML report in `results/report.html`.*
+**Verdict: the news signal did not hold up.** Before the test was run, success was
+defined as passing all three of these checks on the 2022–today test period:
+
+| Success check (2022–today) | Result |
+|---|---|
+| Sharpe ratio above 0 after costs | ✔ 0.27 |
+| Beats the same rule with the news removed | ✔ 0.27 vs. −0.68 |
+| Beats shuffled news (placebo p-value below 0.05) | ✘ p = 0.059 |
+
+| Strategy | Period | Annual return | Sharpe | Max drawdown | Hit rate | Trades |
+|---|---|---|---|---|---|---|
+| news divergence (FinBERT) | 2015–2021 (development) | −2.9% | −0.09 | −34.8% | 46% | 259 |
+| news divergence (FinBERT) | 2022–today (test) | +3.4% | 0.27 | −45.1% | 55% | 225 |
+| news divergence (VADER) | 2015–2021 (development) | −2.1% | −0.02 | −41.5% | 52% | 236 |
+| news divergence (VADER) | 2022–today (test) | +8.1% | 0.50 | −30.1% | 50% | 223 |
+| price only (no news) | 2015–2021 (development) | −7.5% | −0.44 | −57.9% | 52% | 2,730 |
+| price only (no news) | 2022–today (test) | −10.4% | −0.68 | −47.4% | 51% | 1,958 |
+| buy and hold (equal weight) | 2015–2021 (development) | +16.7% | 1.02 | −28.3% | – | – |
+| buy and hold (equal weight) | 2022–today (test) | +11.5% | 0.84 | −20.3% | – | – |
+
+*All returns are after 5 basis points of cost per trade, each way. The test period ran
+through 2026-10-09.*
+
+**In plain terms:**
+- **2015–2021:** the strategy lost money. Even before trading costs it made about 0% a year
+  (Sharpe +0.08), so the signal had no edge to lose.
+- **2022–today:** it made +3.4% a year, but trailed simply holding the same stocks (+11.5%) and
+  had a 45% worst drawdown. Its lead over shuffled news (p = 0.059) misses the bar set in advance.
+  Two scorers were tested, which makes a near-miss even less convincing.
+- **Tone vs. next-day return:** essentially no relationship (correlation −0.011 in 2015–2021,
+  +0.005 in 2022–today, across about 58,000 stock-days).
+- **VADER vs. FinBERT:** the simple word-list scorer did *better* than FinBERT out-of-sample.
+  When the cruder tool wins, the differences are most likely noise.
+- **A likely explanation (not tested here):** news about the most-watched US companies is
+  absorbed into the price within minutes. A daily strategy that trades at the next morning's
+  open arrives after the move.
+
+Full report with equity curves, the placebo test and data coverage: [`results/report.html`](results/report.html).
+The settings were never tuned, and no filters were added after seeing these results.
 <!-- RESULTS:END -->
 
 ## How it works
@@ -71,7 +107,7 @@ is built to prevent both.
 | **Locked test period** | 2015–2021 was used to build the strategy. 2022–today stays locked, and its results are not even computed, until the settings are frozen. Every run on the test period is logged in the database and listed in the report. Re-running it with changed settings is refused unless a written reason is given. |
 | **Success defined in advance** | Before the test was run, success was defined as all three of: Sharpe > 0 after costs, beating the same rule with the news removed, and beating shuffled news (p < 0.05). |
 | **Three comparisons** | **Price-only** (same rule, no news): does the news add anything? **Placebo** (same rule fed sentiment shuffled across days, 100 times): does real news beat random noise? **Buy-and-hold** of the same 30 stocks. |
-| **No rescue filters** | If the result is weak, it is reported as weak. |
+| **No tuning, no rescue filters** | The settings chosen at the start were never adjusted, even though the development results were weak. The weak result is reported as weak. |
 
 ## Running it yourself
 
@@ -177,6 +213,12 @@ did well.
   tickers are missing, so results are optimistic.
 - **Headline edits.** Stories keep their original timestamp, but the provider returns
   their latest wording.
+- **Scoring and tagging errors.** A spot check of 20 random headlines found FinBERT far
+  better than VADER but not perfect: it missed some praise and misread one bullish market
+  headline. Benzinga's ticker tags are occasionally wrong (a story about the Amazon
+  rainforest was tagged as Amazon the company). Both add noise.
+- **Concentrated positions.** On days it holds anything, the rule usually holds a single
+  stock (median 1; one to three stocks on 96% of those days). That is why its drawdowns are large.
 - **Uneven coverage.** Apple gets hundreds of headlines a month, Coca-Cola about 15.
   Quieter stocks rarely produce signals.
 - **Fills at the open are assumed.** Real fills can be worse, especially on volatile mornings.

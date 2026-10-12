@@ -366,6 +366,14 @@ th.sub { font-weight: 400; color: var(--muted); }
 .tooltip .row span:last-child { color: var(--ink-2); }
 details { margin: 8px 0 0; font-size: 13px; }
 summary { cursor: pointer; color: var(--ink-2); }
+/* Charts shrink to fit a phone, which would shrink their text to an unreadable
+   size too. Chart text is measured in the chart's own units, so it is enlarged
+   here to stay about 9-10px on screen. */
+@media (max-width: 600px) {
+  .chart .tick { font-size: 19px; }
+  .chart .label, .chart .zone-label { font-size: 19px; }
+  .chart .dot-label { font-size: 21px; }
+}
 """
 
 CHART_JS = """

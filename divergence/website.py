@@ -42,7 +42,9 @@ def latest_rows(result: ScanResult) -> pd.DataFrame:
     latest["holds"] = latest["ticker"].map(holds).fillna("–")
     developing = result.developing.set_index("ticker") if not result.developing.empty else pd.DataFrame()
     latest["since_close"] = latest["ticker"].map(
-        lambda t: (f"{int(developing.loc[t, 'headlines'])} · {developing.loc[t, 'provisional']}"
+        lambda t: (f"{int(developing.loc[t, 'headlines'])} headlines · "
+                   + {"BULLISH": "heading to BUY", "BEARISH": "heading to SHORT"}.get(
+                       developing.loc[t, "provisional"], "no signal")
                    if t in developing.index else "–"))
     return latest
 
@@ -60,6 +62,9 @@ def todays_example(latest: pd.DataFrame, threshold: float) -> str:
     scored = scored.assign(closeness=[closeness(t, r) for t, r in zip(scored["sentiment_z"], scored["return_z"])])
     row = scored.sort_values("closeness", ascending=False).iloc[0]
     numbers = f"news tone z {row['sentiment_z']:+.1f}, price z {row['return_z']:+.1f}"
+    if row["flag"] == 0:
+        leaning = "good news, lagging price" if row["sentiment_z"] > row["return_z"] else "bad news, rising price"
+        numbers += f": {leaning}"
     if row["flag"] == 1:
         return f"<strong>{row['ticker']}</strong> is in the buy zone ({numbers}), so the bot buys it at the next open."
     if row["flag"] == -1:
@@ -335,8 +340,8 @@ heading. That reading is provisional until the next close.</p>
 {paper}
 
 <h2>Did the idea work historically?</h2>
-<p class="note">Built and tuned on 2015–2021 only; then the settings were locked and it was run once on
-2022–today. Returns are after trading costs.</p>
+<p class="note">Developed on 2015–2021 with settings chosen in advance and never tuned. The settings were then
+locked and the strategy was run once on 2022–today. Returns are after trading costs.</p>
 <div class="card">{backtest}</div>
 
 <h2>Why the test can be trusted</h2>
