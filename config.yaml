@@ -74,7 +74,11 @@ backtest:
   # Set to true only once the signal settings above are final. That unlocks
   # the out-of-sample test. Every out-of-sample run is logged in the database
   # and listed in the report.
-  locked: false
+  #
+  # Locked on 2026-10-12. The signal settings were never tuned: the 2015-2021
+  # results were weak (Sharpe about 0 before costs), and adjusting settings
+  # to rescue them would have been fitting the past.
+  locked: true
 
 paper:
   # Fake money per position in the Alpaca paper account. A paper account
