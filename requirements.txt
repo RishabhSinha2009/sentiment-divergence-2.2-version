@@ -1,0 +1,13 @@
+yfinance==1.7.0
+curl_cffi==0.16.3
+pandas==3.0.6
+numpy==2.5.4
+pandas_market_calendars==5.5.0
+requests==2.34.2
+PyYAML==6.0.3
+python-dotenv==1.2.4
+torch==2.14.1
+transformers==5.19.0
+vaderSentiment==3.3.2
+websockets==17.2
+pytest==9.1.1

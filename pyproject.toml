@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sentiment-divergence"
+version = "1.0.0"
+description = "Tests whether stocks catch up when their news tone and price move in opposite directions."
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Rishabh Sinha" }]
+requires-python = ">=3.11"
+dependencies = [
+    "yfinance>=1.7",
+    "curl_cffi>=0.15",
+    "pandas>=3.0",
+    "numpy>=2.0",
+    "pandas_market_calendars>=5.0",
+    "requests>=2.31",
+    "PyYAML>=6.0",
+    "python-dotenv>=1.0",
+    "torch>=2.9",
+    "transformers>=5.0",
+    "vaderSentiment>=3.3",
+    "websockets>=14",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+# Install with `pip install -e .` (editable). The tool reads config.yaml and
+# writes data/ and results/ next to its own code, so it runs from the repo
+# folder rather than being copied into site-packages.
+[project.scripts]
+divergence = "divergence.__main__:main"
+
+[tool.setuptools]
+packages = ["divergence"]

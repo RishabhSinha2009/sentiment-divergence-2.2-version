@@ -1,0 +1,73 @@
+# Rebuilds the public website on market days and publishes it with GitHub Pages.
+#
+# It runs with the repo owner's Alpaca keys, stored as encrypted repository
+# secrets (Settings -> Secrets and variables -> Actions). Visitors never see
+# them and need no keys of their own.
+name: website
+
+on:
+  schedule:
+    - cron: "15 12 * * 1-5"        # before the open (8:15 am New York in summer, 7:15 in winter)
+    - cron: "*/30 13-21 * * 1-5"   # every 30 minutes through the trading day and just after the close
+  workflow_dispatch:                # lets the owner run it by hand from the Actions tab
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: website
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      ALPACA_API_KEY_ID: ${{ secrets.ALPACA_API_KEY_ID }}
+      ALPACA_API_SECRET_KEY: ${{ secrets.ALPACA_API_SECRET_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+      - name: Cache the FinBERT model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: finbert-v1
+      # Recent prices, headlines and scores are kept between runs in GitHub's
+      # private cache, so each run only fetches what is new. The database is
+      # never published, because the news text is licensed.
+      - name: Restore the database
+        uses: actions/cache/restore@v4
+        with:
+          path: data/market.db
+          key: db-${{ github.run_id }}
+          restore-keys: db-
+      - run: pip install torch==2.14.1 --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install -r requirements.txt && pip install -e .
+      - name: Place the morning paper trades (fake money)
+        if: github.event.schedule == '15 12 * * 1-5'
+        run: divergence --recent-days 150 paper-trade --yes
+      - name: Build the website
+        run: divergence --recent-days 150 site
+      - name: Save the database
+        uses: actions/cache/save@v4
+        with:
+          path: data/market.db
+          key: db-${{ github.run_id }}
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

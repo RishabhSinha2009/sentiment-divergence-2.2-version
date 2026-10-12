@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.egg-info/
+build/
+# Downloaded data is rebuilt by the pipeline and the news is licensed content,
+# so it is never committed. The website is built and published by GitHub's
+# scheduled job, so its generated copy (which quotes headlines) isn't committed either.
+data/
+site/
+# API keys
+.env

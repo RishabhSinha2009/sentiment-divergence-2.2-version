@@ -1,0 +1,20 @@
+# Runs the full test suite on every push, so anyone visiting the repo can see
+# the tests pass on a clean machine, not just on the author's laptop.
+name: tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      # The CPU-only build of torch is a fraction of the size of the default
+      # GPU build, and the tests don't need a GPU.
+      - run: pip install torch==2.14.1 --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install -r requirements.txt
+      - run: pip install -e .
+      - run: pytest -q

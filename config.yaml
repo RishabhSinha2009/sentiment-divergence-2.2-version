@@ -1,0 +1,85 @@
+# Every setting the experiment depends on lives here, so changing the
+# experiment never means editing code. Later stages add their parameters
+# to this file.
+
+universe:
+  # Selection rule: among the largest S&P 500 companies by market value at the
+  # start of 2015, keeping only those still listed under the same ticker today.
+  # The list was picked by hand from that rule, not computed from
+  # point-in-time index data. Keeping only survivors biases results upward
+  # (survivorship bias); see the README.
+  tickers:
+    - AAPL   # Apple
+    - MSFT   # Microsoft
+    - GOOGL  # Alphabet (Google)
+    - AMZN   # Amazon
+    - XOM    # Exxon Mobil
+    - CVX    # Chevron
+    - JNJ    # Johnson & Johnson
+    - PFE    # Pfizer
+    - MRK    # Merck
+    - GILD   # Gilead Sciences
+    - UNH    # UnitedHealth
+    - JPM    # JPMorgan Chase
+    - WFC    # Wells Fargo
+    - BAC    # Bank of America
+    - C      # Citigroup
+    - V      # Visa
+    - WMT    # Walmart
+    - PG     # Procter & Gamble
+    - KO     # Coca-Cola
+    - PEP    # PepsiCo
+    - HD     # Home Depot
+    - DIS    # Disney
+    - CMCSA  # Comcast
+    - VZ     # Verizon
+    - T      # AT&T
+    - ORCL   # Oracle
+    - INTC   # Intel
+    - IBM    # IBM
+    - CSCO   # Cisco
+    - QCOM   # Qualcomm
+
+  # News providers sometimes tag a company under a second ticker. Alphabet
+  # has two share classes, and stories are often tagged GOOG instead of GOOGL.
+  news_aliases:
+    GOOGL: [GOOG]
+
+dates:
+  start: "2015-01-01"
+  # null means "through the most recent trading day that has closed".
+  end: null
+
+database: data/market.db
+
+news:
+  provider: alpaca
+  page_size: 50   # the most Alpaca returns per request
+
+signal:
+  # Starting values chosen by reasoning, before looking at any results.
+  # Stage 4 may adjust them using 2015-2021 data only; then they are locked
+  # and the 2022-today test is run once.
+  sentiment_model: finbert   # or vader
+  return_days: 5             # "price has lagged" = return over the last 5 trading days
+  zscore_window: 60          # each z-score compares today with the previous 60 trading days (~3 months)
+  min_history: 20            # fewer past readings than this means no z-score, so no signal
+  threshold: 1.5             # how many standard deviations counts as "strongly"
+  holding_days: 5            # N: days a position is held after a signal
+
+backtest:
+  in_sample_end: "2021-12-31"   # develop on 2015-2021; 2022-today is the out-of-sample test
+  cost_bps_per_side: 5          # 0.05% of the amount traded, on every buy and every sell
+  placebo_runs: 100             # shuffled-sentiment runs to compare the real strategy against
+  # Set to true only once the signal settings above are final. That unlocks
+  # the out-of-sample test. Every out-of-sample run is logged in the database
+  # and listed in the report.
+  locked: false
+
+paper:
+  # Fake money per position in the Alpaca paper account. A paper account
+  # starts with $100,000, so this leaves room for many positions at once.
+  dollars_per_position: 5000
+
+site:
+  repo_url: https://github.com/RishabhSinha2009/sentiment-divergence
