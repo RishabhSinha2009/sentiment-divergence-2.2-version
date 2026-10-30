@@ -12,7 +12,7 @@ test is designed to tell a real pattern apart from one that only fits the past.
 It also runs on today's news: a daily scan, a live mode that scores each headline
 within about a second of publication, and a paper-trading bot (fake money).
 
-**Live site: [rishabhsinha2009.github.io/sentiment-divergence](https://rishabhsinha2009.github.io/sentiment-divergence/).**
+**Live site: [sentiment-divergence-rouge.vercel.app](https://sentiment-divergence-rouge.vercel.app/).**
 It shows today's signals, a step-by-step view of how the bot decides, the headlines it just read,
 and its paper-trading track record. It updates itself every 30 minutes on market days, and you
 don't need an account to see it.
