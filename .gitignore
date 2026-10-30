@@ -12,3 +12,4 @@ site/
 .env
 # Local preview settings for the Claude desktop app
 .claude/
+dist/

@@ -181,15 +181,18 @@ A scheduled GitHub Actions job (`.github/workflows/site.yml`) runs on weekdays:
 - **Before the open:** it places the bot's paper trades.
 - **Every 30 minutes through the trading day:** it rebuilds the page with fresh news, scores and prices.
 
-The page is published with GitHub Pages. The job works from the last 150 days of data,
+The page is published on Vercel. The job works from the last 150 days of data,
 which is enough for the 60-day comparisons, so it never needs the 10-year history.
 
 **Run your own copy:**
 1. Fork the repo.
-2. In **Settings → Secrets and variables → Actions**, add two secrets, `ALPACA_API_KEY_ID`
-   and `ALPACA_API_SECRET_KEY`, holding your own free Alpaca paper keys.
-3. In **Settings → Pages**, set the source to **GitHub Actions**.
-4. In the **Actions** tab, run the "website" workflow once. After that it runs on its own.
+2. Create a free [Vercel](https://vercel.com) account and an access token
+   (**Account Settings → Tokens**).
+3. In your fork's **Settings → Secrets and variables → Actions**, add three secrets:
+   `ALPACA_API_KEY_ID` and `ALPACA_API_SECRET_KEY` (your own free Alpaca paper keys),
+   and `VERCEL_TOKEN`.
+4. In the **Actions** tab, run the "website" workflow once. It creates the Vercel project
+   and publishes the page. After that it runs on its own.
 
 ## Data
 

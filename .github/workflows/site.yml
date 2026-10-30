@@ -1,8 +1,9 @@
-# Rebuilds the public website on market days and publishes it with GitHub Pages.
+# Rebuilds the public website on market days and publishes it on Vercel.
 #
-# It runs with the repo owner's Alpaca keys, stored as encrypted repository
-# secrets (Settings -> Secrets and variables -> Actions). Visitors never see
-# them and need no keys of their own.
+# Repository secrets (Settings -> Secrets and variables -> Actions). Visitors
+# never see them and need no keys of their own:
+#   ALPACA_API_KEY_ID, ALPACA_API_SECRET_KEY   the owner's Alpaca paper-trading keys
+#   VERCEL_TOKEN                               an access token for the owner's Vercel account
 name: website
 
 on:
@@ -13,19 +14,18 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: website
   cancel-in-progress: false
 
 jobs:
-  build:
+  build-and-publish:
     runs-on: ubuntu-latest
     env:
       ALPACA_API_KEY_ID: ${{ secrets.ALPACA_API_KEY_ID }}
       ALPACA_API_SECRET_KEY: ${{ secrets.ALPACA_API_SECRET_KEY }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -58,16 +58,15 @@ jobs:
         with:
           path: data/market.db
           key: db-${{ github.run_id }}
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/setup-node@v4
         with:
-          path: site
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          node-version: "22"
+      # The page is plain HTML, so Vercel only hosts the files; nothing is built there.
+      # The first run creates the Vercel project; later runs find it already exists.
+      - name: Publish to Vercel
+        if: env.VERCEL_TOKEN != ''
+        working-directory: site
+        run: |
+          npx --yes vercel@64.3.1 project add sentiment-divergence --token "$VERCEL_TOKEN" || true
+          npx --yes vercel@64.3.1 link --yes --project sentiment-divergence --token "$VERCEL_TOKEN"
+          npx --yes vercel@64.3.1 deploy --prod --yes --token "$VERCEL_TOKEN"
